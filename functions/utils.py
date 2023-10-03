@@ -15,7 +15,10 @@ import json
 
 def extract_chords(text):
     """Extracts the chords given a text. The text variable is a string representation of the kern files found in the dataset. It also 
-    combines the sections that are on top of the fuile (the sequnce element)"""
+    combines the sections that are on top of the fuile (the sequnce element). A sequnce element looks like this:
+    *>[A,A2,B,A3]
+    it is not a must (there are some files without it). Before each chord, there is a time information, e.g. 2C:min. This function will
+    not discard it, but repeat the chord 2 times."""
     lines = text.strip().split("\n")
     chords_sections = {}
     sequnce_element = ""
