@@ -18,7 +18,14 @@ def extract_chords(text):
     combines the sections that are on top of the fuile (the sequnce element). A sequnce element looks like this:
     *>[A,A2,B,A3]
     it is not a must (there are some files without it). Before each chord, there is a time information, e.g. 2C:min. This function will
-    not discard it, but repeat the chord 2 times."""
+    not discard it, but repeat the chord 2 times.
+    Since we now consier time inforamtion this is very important:
+    In our dataset, the following rythms occur:
+    {'4/4': 1099, '3/4': 79, '6/4': 3, '5/4': 3, '3/2': 1, '6/8': 1}
+    Since we have very dominant 4/4 percentage, We will "normalize everything to 4/4. When we have a 3/4 beat played, the content of one measure (or bar) may look like this:
+    2.Amin7
+    This means a half note dotted (half dutation of the note longer). So it would be a third in duration.
+    """
     lines = text.strip().split("\n")
     chords_sections = {}
     sequnce_element = ""
@@ -42,21 +49,26 @@ def extract_chords(text):
             
         # check if we have digit (aka duration in front) 
         if line[0].isdigit():
+            
             if sequnce_element != "":
-            # check if we have a dotted note
-                if line[1] == ".":
-                    # split("(") removes subsitute chord
-                    chords_sections[current_section] = chords_sections[current_section] + [line[2:].split("(")[0]]
-                else:
-                    chords_sections[current_section] = chords_sections[current_section] + [line[1:].split("(")[0]]
+                chords_sections[current_section] = chords_sections[current_section] + [line.split("(")[0]]
+            #     duration = line[0]
+            #     # check if we have a dotted note
+            #     if line[1] == ".":
+            #         # split("(") removes subsitute chord        #we add the time plus the dot if so to the chord information
+            #         chords_sections[current_section] = chords_sections[current_section] + [duration + "." + line[2:].split("(")[0]]
+            #     else:
+            #         # duration added, no dot
+            #         chords_sections[current_section] = chords_sections[current_section] + [duration + line[1:].split("(")[0]]
             
             # no sequnce element
             else:
-                if line[1] == ".":
-                    # split("(") removes subsitute chord
-                    chords_no_element.append(line[2:].split("(")[0])
-                else:
-                    chords_no_element.append(line[1:].split("(")[0])
+                chords_no_element.append(line.split("(")[0])
+                # if line[1] == ".":
+                #     # split("(") removes subsitute chord
+                #     chords_no_element.append(line[2:].split("(")[0])
+                # else:
+                #     chords_no_element.append(line[1:].split("(")[0])
             
 
     # order the chords accordingly
@@ -70,6 +82,36 @@ def extract_chords(text):
     
     if sequnce_element != "": return final_sequnce
     else: return chords_no_element
+
+
+def flatten_chords(chords:list):
+    """Inputs a list of chords with time infraomtion in front. Takes this time infomation and converts
+    it to a seqcune format , eg. 1B:min -> [B:min, B:min, B:min, B:min].
+    Important: The final rythm will be 4/4 since our dataset has most datapoints in this rythm.
+    """
+    # defines how many times a chord is repeated in our 1/4 teimstep. since one step at the rnn is 1/4 bars, a duration of 1 will be played 4 time steps into the rnn
+    repeats = {'1': 4, '2': 2, '4': 1, '2.': 3, '4.': 1, '1.': 6, '8': 4}
+    arranged_chords = []
+    for chord in chords:
+        # check if we have a dotted note
+        if chord[1] == ".":
+            arranged_chords.extend([chord[2:]] * repeats[chord[:2]])
+
+        else:
+            arranged_chords.extend([chord[1:]] * repeats[chord[0]])
+
+    return arranged_chords
+                
+
+
+def extract_signature(text):
+    # Using regular expression to find the pattern *M followed by a time signature
+    match = re.search(r'\*M(\d+/\d+)', text)
+    if match:
+        return match.group(1)
+    else:
+        return None
+
 
 
 ## Chord Simplification pipeline ----------------------------------------------------------------------------------------------------------------------------
