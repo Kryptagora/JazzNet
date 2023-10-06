@@ -114,121 +114,58 @@ def extract_signature(text):
 
 
 
-## Chord Simplification pipeline ----------------------------------------------------------------------------------------------------------------------------
+## Chord Simplification Visualization pipeline ----------------------------------------------------------------------------------------------------------------------------
 
-def check_chord(chord:str=None):
-    original_chord = chord # for debugging
-    #first check if its a chord at all
-    if not is_chord(chord): return False
-        
-    # then get root for later
-    root_note = get_root(chord)
-    if root_note == "C-":
-        root_note = "B"
-
-    # now, we sometimes have werid symbols in the chords (playstlyes, arpegio or harmonic indicators. we will just remove them)
-    # A list of possible "playstyle" symbols
-    playstyle_symbols = ["#", "o", "h", "^", "*", ";", "+"]
+def visualize_chord_simplification(chords, ChordSimplifier):
+    """This function takes chords, which is a list of chords with ONE chord of each kind (no repetition), 
+    compares the before and after of the simlification, and displays the results in a way that is readable by humans. This is very helpful
+    when debugging or verifying that the simplification procedures were successful."""
     
-    # Removing playstyle symbols from the chord
-    for symbol in playstyle_symbols:
-        chord = chord.replace(symbol, "")
+    # Helper function to format complicated chords
+    def format_complicated_chords(simple_chord, comp_chords):
+        MAX_WIDTH = 80
+        base_indent = len("Simplified Chord | ")
+        max_indent = 40  # Maximum threshold for indentation
+        indent = min(len(simple_chord) + base_indent, max_indent)
+        comp_chords_str = ', '.join(comp_chords)
         
-    # now check again; some
-    if not is_chord(chord): return False
+        # Split the complicated chords string if it exceeds the max width
+        formatted_chords = []
+        while comp_chords_str:
+            if len(simple_chord + " | " + comp_chords_str) <= MAX_WIDTH:
+                formatted_chords.append(comp_chords_str)
+                break
+            split_index = comp_chords_str.rfind(',', 0, MAX_WIDTH - len(simple_chord + " | "))
+            formatted_chords.append(comp_chords_str[:split_index])
+            comp_chords_str = comp_chords_str[split_index + 2:]
 
-    # Search for "min"
-    if re.search(r'min', chord):
-        #print(f'Found min in {chord}')
-        return root_note + ":min"
-    
-    # Search for "maj"
-    if re.search(r'maj', chord):
-        #print(f'Found maj in {chord}')
-        return root_note + ":maj"
-    
-    # Search for chords with a number
-    if re.search(r'[A-G]-?\d', chord):
-        #print(f'Found chord with a number in {chord}')
-        return root_note + ":maj"
+        return formatted_chords
 
-    # Search for slash chords - gives us a major
-    if re.search(r'/', chord):
-        #print(f'Found slash chord in {chord}')
-        return root_note + ":maj"
-
-    # Search for add9|sus|aug chords
-    if re.search(r'(add9|sus|aug)', chord):
-        #print(f'Found dim, sus, aug chord in {chord}')
-        return root_note + ":maj"
-
-    # search for dim
-    if re.search(r'(dim)', chord):
-        #print(f'Found dim, sus, aug chord in {chord}')
-        return root_note + ":min"
-
-    # this seems like a annotation issue, but here is the case nontheless (D-:7, B-:7)
-    if re.search(r'[A-G]-?:', chord):
-        #print(f'Found chord with colon after the root note in {chord}')
-        return root_note + ":maj"
-
-    # now, some chords are not found, they cant be -> more aggresive chord checking:
-    if len(chord) <= 2: return False
-
-    raise ValueError("No case found!")
-
-
-def get_root(chord):
-    # extracts the root - becuase chords can eiter be "normal" like G, C or flat: D-, G-, ....
-    if chord[1] == '-':  # checks if the second character is '-' which indicates a flat
-        return chord[:2]  # return the first two characters (the flat note)
-    elif re.search(r'^[A-G]#', chord):        
-        return transpose_chord(chord) 
-        
-    else:
-        return chord[0]   # return the first character (the single note)
-
-
-def transpose_chord(chord):
-    # some chords in the dataset are sharps. Since we want to reduce vocab size, we will aslo prune them.
-    white_keys = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
-
-    if '#' not in chord:
-        raise ValueError("Function triggered without need")
-
-    note = chord[0]
-    if note in white_keys:
-        return white_keys[(white_keys.index(note) + 1) % len(white_keys)] + "-"
-    else:
-        raise ValueError("Note does not exist")
-
-
-def is_chord(chord):
-    # A list of possible symbols that indiate certian playstyles like glissandro, harmonic (taken from dataset docs)
-    playstyle_symbols = ["-", "#", "o", "h", "^"]
-
-    # ignore rest chords
-    if "r" in chord[:2]:
-        return False
-        
-    # some dingus used C- (C flat) in the dataset sometimes. We just replace it to B
-    chord = re.sub(r'C-', 'B', chord)
-    
-    # Check if chord contains any playstyle symbol with a note (it's a note, not a chord)
-    if len(chord) <= 2 and re.match(r'^[A-G](' + '|'.join(map(re.escape, playstyle_symbols)) + ')?$', chord):
-        return False
-
-    # Otherwise, it should be a chord
-    return True
-
-
-def batch_simplify_chord(chords:list=None):
-    simple_chords = []
+    # Using the updated ChordSimplifier to simplify chords
+    simplifier = ChordSimplifier()
+    simplified_chords = {}
     for chord in chords:
-        s_chord = check_chord(chord)
-        if s_chord: simple_chords.append(s_chord)
+        simplified = simplifier.simplify_chord(chord)
+        # Convert boolean values to "Invalid/No Chords" string
+        if isinstance(simplified, bool):
+            simplified = "Invalid/No Chords"
+        if simplified not in simplified_chords:
+            simplified_chords[simplified] = []
+        simplified_chords[simplified].append(chord)
 
-    return simple_chords
+    # Textual visualization
+    output_lines = []
+    output_lines.append("Simplified Chord   | Complicated Chords")
+    output_lines.append("--------------------------------------------")
+    for simple_chord, complicated_chords in simplified_chords.items():
+        comp_chords_list = format_complicated_chords(simple_chord, complicated_chords)
+        output_lines.append(f"{simple_chord:<18} | {comp_chords_list[0]}")
+        for comp_chord in comp_chords_list[1:]:
+            output_lines.append(f"{' ':<18} | {comp_chord}")
+        output_lines.append("--------------------------------------------")
+
+    # Return the visualization
+    return '\n'.join(output_lines)
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
