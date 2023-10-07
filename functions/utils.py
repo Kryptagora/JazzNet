@@ -213,3 +213,25 @@ def encode_chords(all_chords:list):
     return chord_vocab, chord_to_idx, idx_to_chord, padded_sequences, vocab_size
 
 
+def add_start_end_tokens(sequnce_list_2d):
+    """
+    Add <BOS> (Beginning Of Sequence) and <EOS> (End Of Sequence) tokens
+    to each sequence in a 2D list.
+    
+    Args:
+    - sequnce_list_2d (list of lists): A 2D list where each inner list is a sequence.
+    
+    Returns:
+    - list of lists: Updated sequences with tokens added.
+    """
+    
+    updated_sequences = []
+    
+    for sequence in sequnce_list_2d:
+        updated_sequence = ["<BOS>"] + sequence + ["<EOS>"]
+        updated_sequences.append(updated_sequence)
+        
+    return updated_sequences
+
+
+
