@@ -3,8 +3,8 @@ import re
 class ChordSimplifier:
     def __init__(self):
         self.JAZZ5_KINDS = ["maj", "min", "maj7", "min7", "dom", "hdim7", "dim"]
-        self.JAZZ5_MIREX_KINDS = ["", ":min", ":maj7", ":min7", ":7", ":hdim7", ":dim"]
-        self.playstyle_symbols = ["o", "h", "^", "*", ";", "+"]
+        self.JAZZ5_MIREX_KINDS = [":maj", ":min", ":maj7", ":min7", ":7", ":hdim7", ":dim7"]
+        self.playstyle_symbols = ["^", "*", ";", "+"]
         self.not_found = []
         # h end glissando
         # o harmonic
@@ -21,7 +21,7 @@ class ChordSimplifier:
             return chord[0]
     
     def _is_chord(self, chord):
-        playstyle_symbols = ["-", "#", "o", "h", "^"]
+        playstyle_symbols = ["-", "#", "^"]
         if "r" in chord[:2]:
             return False
         chord = re.sub(r'C-', 'B', chord)
@@ -38,9 +38,10 @@ class ChordSimplifier:
         quality_list = [
             ("maj7", self.JAZZ5_MIREX_KINDS[2]),
             ("min7", self.JAZZ5_MIREX_KINDS[3]),
+            ("h", self.JAZZ5_MIREX_KINDS[5]), # h7 and h are the same
+            ("o7", self.JAZZ5_MIREX_KINDS[6]), # dimished seventh 
+            ("o", self.JAZZ5_MIREX_KINDS[6]), # map to same as above
             ("7", self.JAZZ5_MIREX_KINDS[4]),
-            ("hdim7", self.JAZZ5_MIREX_KINDS[5]),
-            ("dim7", self.JAZZ5_MIREX_KINDS[6]),
             ("maj", self.JAZZ5_MIREX_KINDS[0]),
             ("min", self.JAZZ5_MIREX_KINDS[1]),
             ("dim", self.JAZZ5_MIREX_KINDS[6])

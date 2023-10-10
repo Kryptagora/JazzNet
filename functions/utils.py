@@ -101,6 +101,27 @@ def flatten_chords(chords:list):
             arranged_chords.extend([chord[1:]] * repeats[chord[0]])
 
     return arranged_chords
+
+
+def flatten_chords_half(chords:list):
+    """Inputs a list of chords with time infraomtion in front. Takes this time infomation and converts
+    it to a seqcune format , eg. 1B:min -> [B:min, B:min].
+    Important: The final rythm will be 4/4 since our dataset has most datapoints in this rythm. 
+    !! This function will only consider timesteps of 2/4.
+    """
+    # defines how many times a chord is repeated in our 1/4 teimstep. since one step at the rnn is 1/4 bars, a duration of 1 will be played 4 time steps into the rnn
+    repeats = {'1': 2, '2': 1}
+    arranged_chords = []
+    for chord in chords:
+        # check if we have a dotted note
+        if chord[1] == "." or (chord[0] not in ["1", "2"]):
+            raise ValueError(chord)
+            arranged_chords.extend([chord[2:]] * repeats[chord[:2]])
+
+        else:
+            arranged_chords.extend([chord[1:]] * repeats[chord[0]])
+
+    return arranged_chords
                 
 
 
