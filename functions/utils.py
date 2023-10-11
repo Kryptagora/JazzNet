@@ -227,7 +227,7 @@ def encode_chords(all_chords:list):
     # Vocab Size 
     vocab_size = padded_sequences.max().item() + 1
     
-    # add the pad tokens to both 
+    # add the pad tokens to both with high number to not learn embedding
     chord_to_idx['pad'] = 0
     idx_to_chord[0] = 'pad'
 

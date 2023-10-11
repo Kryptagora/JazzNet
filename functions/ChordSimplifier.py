@@ -38,13 +38,11 @@ class ChordSimplifier:
         quality_list = [
             ("maj7", self.JAZZ5_MIREX_KINDS[2]),
             ("min7", self.JAZZ5_MIREX_KINDS[3]),
-            ("h", self.JAZZ5_MIREX_KINDS[5]), # h7 and h are the same
-            ("o7", self.JAZZ5_MIREX_KINDS[6]), # dimished seventh 
-            ("o", self.JAZZ5_MIREX_KINDS[6]), # map to same as above
+            ("h", self.JAZZ5_MIREX_KINDS[5]), # h-dim and h-dim 7th to hdim7
+            ("o", self.JAZZ5_MIREX_KINDS[6]), # dimished and dimished seventh seventh to dim7
             ("7", self.JAZZ5_MIREX_KINDS[4]),
             ("maj", self.JAZZ5_MIREX_KINDS[0]),
             ("min", self.JAZZ5_MIREX_KINDS[1]),
-            ("dim", self.JAZZ5_MIREX_KINDS[6])
         ]
         for quality, chord_type in quality_list:
             if quality in chord:
