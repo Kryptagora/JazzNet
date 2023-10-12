@@ -133,6 +133,14 @@ def extract_signature(text):
     else:
         return None
 
+def extract_year(text):
+    # extracts the year of a kern file
+    for line in text.split("\n"):
+        if line.startswith("!!!ODT:"):
+            return line.split("!!!ODT: ")[1]
+
+    return False 
+
 
 
 ## Chord Simplification Visualization pipeline ----------------------------------------------------------------------------------------------------------------------------
