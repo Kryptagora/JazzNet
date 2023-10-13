@@ -242,6 +242,34 @@ def encode_chords(all_chords:list):
     return chord_vocab, chord_to_idx, idx_to_chord, padded_sequences, vocab_size
 
 
+def merge_chords(chords):
+    grid = ['4', '2', '2.', '1']
+    repeats = {'1': 4, '2': 2, '4': 1, '2.': 3}
+
+    merged = []
+    i = 0
+    while i < len(chords):
+        measure_fill = 0  # Counter to track current measure's fill level
+        chord_sequence = []
+
+        # Fill up the measure with chords
+        while i < len(chords) and measure_fill < 4:
+            chord = chords[i]
+            chord_sequence.append(chord)
+            measure_fill += 1
+            i += 1
+        
+        # Process the chord sequence to merge similar adjacent chords
+        j = 0
+        while j < len(chord_sequence):
+            count = chord_sequence[j:].count(chord_sequence[j])
+            duration = max([k for k, v in repeats.items() if v <= count], key=repeats.get, default='4')
+            merged.append(duration + chord_sequence[j])
+            j += repeats[duration]
+
+    return merged
+
+
 def add_start_end_tokens(sequnce_list_2d):
     """
     Add <BOS> (Beginning Of Sequence) and <EOS> (End Of Sequence) tokens
