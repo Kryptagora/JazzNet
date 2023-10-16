@@ -5,7 +5,6 @@ __pycache__/
 
 # midi
 
-*.mid
 
 # C extensions
 *.so
